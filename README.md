@@ -6,6 +6,10 @@ Implements EventEmitter.
 
 No dependencies.
 
+## Install
+
+```npm install --save etcars-node-client```
+
 ## Usage
 
 ```javascript
