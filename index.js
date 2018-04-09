@@ -17,6 +17,7 @@ class ETCarsClient extends EventEmitter {
 
         this.buffer = '';
         this.packetCount = 0;
+        this._enableDebug = false;
     }
 
     /**
@@ -41,11 +42,31 @@ class ETCarsClient extends EventEmitter {
 
     /**
      * 
+     * 
+     * @memberof ETCarsClient
+     */
+    get enableDebug()
+    {
+        return this._enableDebug;
+    }
+
+    /**
+     * 
+     * 
+     * @memberof ETCarsClient
+     */
+    set enableDebug(value)
+    {
+        this._enableDebug = value;
+    }
+    /**
+     * 
      * Connect or try to connect to ETCars. If not running, poll until ETCars socket will be opened.
      * @memberof ETCarsClient
      */
     connect() {
-        console.log('trying to connect');
+        if (this._enableDebug)
+            console.log('trying to connect');
 
         var instance = this;
 
@@ -68,7 +89,11 @@ class ETCarsClient extends EventEmitter {
                 instance.receiveData(msg)
             });
         } catch (err) {
-            console.log(err);
+            
+            if (this._enableDebug)
+            {               
+                console.log(err);
+            }
         }
     }
 
@@ -79,7 +104,9 @@ class ETCarsClient extends EventEmitter {
      * @memberof ETCarsClient
      */
     receiveClose() {
-        console.log('socket closed');
+
+        if (this._enableDebug)
+            console.log('socket closed');
 
         setTimeout(() => this.connect(), 1000);
     }
@@ -90,7 +117,10 @@ class ETCarsClient extends EventEmitter {
      * @memberof ETCarsClient
      */
     receiveDisconnect() {
-        console.log('socket disconnected');
+
+        if (this._enableDebug)
+            console.log('socket disconnected');
+
         this.startChecker();
         this.receiveError('DISCONNECTED');
     }
@@ -102,7 +132,9 @@ class ETCarsClient extends EventEmitter {
      */
     receiveConnect() {
 
-        console.log('connected');
+        if (this._enableDebug)
+            console.log('connected');
+
         clearInterval(this.checker);
 
         this.emit('connect', {
@@ -126,11 +158,20 @@ class ETCarsClient extends EventEmitter {
 
         if (errorCode && typeof (errorCode) != 'undefined' && errorCode != null) {
             if (errorCode == 'ECONNREFUSED')
-                console.log('etcars not installed or game not running');
+            {
+                if (this._enableDebug)
+                    console.log('etcars not installed or game not running');
+            }
             else if (errorCode == 'ECONNRESET')
-                console.log('etcars closed connection or game closed');
+            {
+                if (this._enableDebug)
+                    console.log('etcars closed connection or game closed');
+            }
             else
-                console.error(errorCode);
+            {
+                if (this._enableDebug)
+                    console.error(errorCode);
+            }
         }
 
         this.etcarsSocket.destroy();
@@ -156,7 +197,8 @@ class ETCarsClient extends EventEmitter {
             var json = JSON.parse(jsonRaw);
             this.emit('data', json.data);
         } catch (error) {
-            console.log(error.message);
+            if (this._enableDebug)
+                console.log(error.message);
         }
     }
 }
