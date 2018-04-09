@@ -41,7 +41,7 @@ class ETCarsClient extends EventEmitter {
     }
 
     /**
-     * 
+     * Enable console.log and console.error
      * 
      * @memberof ETCarsClient
      */
@@ -51,7 +51,7 @@ class ETCarsClient extends EventEmitter {
     }
 
     /**
-     * 
+     * Enable console.log and console.error
      * 
      * @memberof ETCarsClient
      */
