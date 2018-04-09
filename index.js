@@ -193,7 +193,7 @@ class ETCarsClient extends EventEmitter {
     receiveData(data) {
         var dataRaw = data.toString();
         try {
-            var jsonRaw = dataRaw.substring(dataRaw.indexOf("{"));
+            var jsonRaw = dataRaw.substring(dataRaw.indexOf("{"),dataRaw.lastIndexOf("\r"));
             var json = JSON.parse(jsonRaw);
             this.emit('data', json.data);
         } catch (error) {
