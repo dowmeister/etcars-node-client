@@ -193,7 +193,7 @@ class ETCarsClient extends EventEmitter {
      */
     receiveData(data) {
         /**
-         * The data is often splited in multiple buffers. Those buffers need to be stored until the final buffer is received.
+         * The data is often split in multiple buffers. Those buffers need to be stored until the final buffer is received.
          * When the last buffer is received, it can be merged with the previous buffers - the result is the complete JSON.
          */
         try {
@@ -216,9 +216,11 @@ class ETCarsClient extends EventEmitter {
                 for (var i = 0; i < this.bufferStack.length; i++) {
                     for (var j = 0; j < this.bufferStack[i].length; j++) {
                         var charCode = this.bufferStack[i][j];
+                        // Detecting whether the initial/the final char is reached
                         if (charCode == 123) startReached = true;
                         if (charCode == 13) endReached = true;
                         if (startReached && !endReached) {
+                            // Adding the character to the String
                             dataRaw += String.fromCharCode(charCode);
                         }
                     }
