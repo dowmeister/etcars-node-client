@@ -18,6 +18,7 @@ class ETCarsClient extends EventEmitter {
         this.buffer = '';
         this.packetCount = 0;
         this._enableDebug = false;
+        this.bufferStack = [];
     }
 
     /**
@@ -191,11 +192,48 @@ class ETCarsClient extends EventEmitter {
      * @memberof ETCarsClient
      */
     receiveData(data) {
-        var dataRaw = data.toString();
+        /**
+         * The data is often splited in multiple buffers. Those buffers need to be stored until the final buffer is received.
+         * When the last buffer is received, it can be merged with the previous buffers - the result is the complete JSON.
+         */
         try {
-            var jsonRaw = dataRaw.substring(dataRaw.indexOf("{"),dataRaw.lastIndexOf("\r"));
-            var json = JSON.parse(jsonRaw);
-            this.emit('data', json.data);
+            var isFinalBuffer = false;
+            // Iterating through the buffer. If it contains "\r" (ascii code 13) then it's the final buffer.
+            for (var i = 0; i < data.length; i++) {
+                if (data[i] == 13) {
+                    isFinalBuffer = true;
+                }
+            }
+
+            // Storing the buffer on the bufferStack
+            this.bufferStack.push(data);
+
+            if (isFinalBuffer) {
+                // Putting all buffers of the bufferStack together to one string
+                var dataRaw = '';
+                var startReached = false;
+                var endReached = false;
+                for (var i = 0; i < this.bufferStack.length; i++) {
+                    for (var j = 0; j < this.bufferStack[i].length; j++) {
+                        var charCode = this.bufferStack[i][j];
+                        if (charCode == 123) startReached = true;
+                        if (charCode == 13) endReached = true;
+                        if (startReached && !endReached) {
+                            dataRaw += String.fromCharCode(charCode);
+                        }
+                    }
+                }
+
+                // Clearing the bufferStack
+                this.bufferStack == [];
+
+                // JSON parsing
+                var json = JSON.parse(dataRaw);
+
+                // Emitting the parsed JSON
+                this.emit('data', json.data);
+            }
+
         } catch (error) {
             if (this._enableDebug)
                 console.log(error.message);
