@@ -19,6 +19,7 @@ class ETCarsClient extends EventEmitter {
         this.packetCount = 0;
         this._enableDebug = false;
         this.bufferStack = [];
+		this.bufferReady = false;
     }
 
     /**
@@ -197,44 +198,22 @@ class ETCarsClient extends EventEmitter {
          * When the last buffer is received, it can be merged with the previous buffers - the result is the complete JSON.
          */
         try {
-            var isFinalBuffer = false;
-            // Iterating through the buffer. If it contains "\r" (ascii code 13) then it's the final buffer.
             for (var i = 0; i < data.length; i++) {
-                if (data[i] == 13) {
-                    isFinalBuffer = true;
-                }
-            }
-
-            // Storing the buffer on the bufferStack
-            this.bufferStack.push(data);
-
-            if (isFinalBuffer) {
-                // Putting all buffers of the bufferStack together to one string
-                var dataRaw = '';
-                var startReached = false;
-                var endReached = false;
-                for (var i = 0; i < this.bufferStack.length; i++) {
-                    for (var j = 0; j < this.bufferStack[i].length; j++) {
-                        var charCode = this.bufferStack[i][j];
-                        // Detecting whether the initial/the final char is reached
-                        if (charCode == 123) startReached = true;
-                        if (charCode == 13) endReached = true;
-                        if (startReached && !endReached) {
-                            // Adding the character to the String
-                            dataRaw += String.fromCharCode(charCode);
-                        }
-                    }
-                }
-
-                // Clearing the bufferStack
-                this.bufferStack == [];
-
-                // JSON parsing
-                var json = JSON.parse(dataRaw);
-
-                // Emitting the parsed JSON
-                this.emit('data', json.data);
-            }
+				if (data[i] == 13) {
+					this.bufferReady = true;
+				}
+			}
+			this.buffer += data;
+			
+			if(this.bufferReady)
+			{
+				this.bufferReady = false;
+				this.buffer = this.buffer.substring(this.buffer.indexOf('{',0),this.buffer.indexOf('\r'));
+				var json = JSON.parse(this.buffer);
+				this.buffer = '';
+				this.emit('data', json.data);
+			}
+			
 
         } catch (error) {
             if (this._enableDebug)
