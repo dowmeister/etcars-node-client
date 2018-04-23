@@ -18,6 +18,8 @@ class ETCarsClient extends EventEmitter {
         this.buffer = '';
         this.packetCount = 0;
         this._enableDebug = false;
+        this.bufferStack = [];
+		this.bufferReady = false;
     }
 
     /**
@@ -191,11 +193,28 @@ class ETCarsClient extends EventEmitter {
      * @memberof ETCarsClient
      */
     receiveData(data) {
-        var dataRaw = data.toString();
+        /**
+         * The data is often split in multiple buffers. Those buffers need to be stored until the final buffer is received.
+         * When the last buffer is received, it can be merged with the previous buffers - the result is the complete JSON.
+         */
         try {
-            var jsonRaw = dataRaw.substring(dataRaw.indexOf("{"),dataRaw.lastIndexOf("\r"));
-            var json = JSON.parse(jsonRaw);
-            this.emit('data', json.data);
+            for (var i = 0; i < data.length; i++) {
+				if (data[i] == 13) {
+					this.bufferReady = true;
+				}
+			}
+			this.buffer += data;
+			
+			if(this.bufferReady)
+			{
+				this.bufferReady = false;
+				this.buffer = this.buffer.substring(this.buffer.indexOf('{',0),this.buffer.indexOf('\r'));
+				var json = JSON.parse(this.buffer);
+				this.buffer = '';
+				this.emit('data', json.data);
+			}
+			
+
         } catch (error) {
             if (this._enableDebug)
                 console.log(error.message);
