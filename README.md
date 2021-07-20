@@ -1,3 +1,5 @@
+# THE PROJECT HAS BEEN DISCONTINUED. PLEASE DON'T OPEN ISSUES.
+
 # ETCars Node.js client
 
 This simple package supply basic integration for a node.js application to connect and receive data from [ETCars](https://etcars.menzelstudios.com/) .
